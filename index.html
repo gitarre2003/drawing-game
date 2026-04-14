@@ -2,27 +2,59 @@
 <html>
 <head>
   <title>Drawing Game</title>
+
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial;
+      text-align: center;
+    }
+
+    input {
+      padding: 8px;
+      margin: 10px;
+      width: 200px;
+      text-align: center;
+    }
+
+    button {
+      margin: 5px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+
+    .danger {
+      background: red;
+      color: white;
+    }
+  </style>
 </head>
+
 <body>
   <h1>2-Player Drawing Game</h1>
 
-  <p>Enter Room ID:</p>
+  <p>Enter Room ID</p>
   <input id="room" placeholder="e.g. room1">
 
-  <br><br>
+  <div>
+    <button onclick="go('left')">Player 1 (Left)</button>
+    <button onclick="go('right')">Player 2 (Right)</button>
+    <button onclick="go('review')">Review</button>
+  </div>
 
-  <button onclick="go('left')">Player 1 (Left)</button>
-  <button onclick="go('right')">Player 2 (Right)</button>
-  <button onclick="go('review')">Review</button>
-  <button onclick="clearAll()">Clear ALL Rooms</button>
+  <br>
 
-  <br><br><br>
+  <button class="danger" onclick="clearAll()">Clear ALL Rooms</button>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // 🔥 REPLACE WITH YOUR FIREBASE CONFIG
     const firebaseConfig = {
       apiKey: "AIzaSyCwqKvYDttWfIMiCrlWCECumOds9YJlkjc",
       authDomain: "draw-97c31.firebaseapp.com",
@@ -38,24 +70,14 @@
 
     window.go = function(page) {
       const room = document.getElementById("room").value;
-      if (!room) {
-        alert("Enter room ID!");
-        return;
-      }
-      window.location.href = page + ".html?room=" + room;
+      if (!room) return alert("Enter room ID!");
+      location.href = `${page}.html?room=${room}`;
     };
 
-    // 🔥 CLEAR ALL DATA
     window.clearAll = async function() {
-      const confirmClear = confirm("Are you sure? This will delete ALL rooms!");
-      if (!confirmClear) return;
-
-      try {
-        await remove(ref(db, "rooms"));
-        alert("All rooms cleared!");
-      } catch (err) {
-        alert("Error: " + err);
-      }
+      if (!confirm("Delete ALL rooms?")) return;
+      await remove(ref(db, "rooms"));
+      alert("All rooms cleared!");
     };
   </script>
 </body>
