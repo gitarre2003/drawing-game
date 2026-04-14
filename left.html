@@ -6,7 +6,9 @@
 <body>
   <h2>Left Player</h2>
 
-  <canvas id="canvas" width="300" height="300" style="border:1px solid black; touch-action: none;""></canvas>
+  <canvas id="canvas" width="300" height="300"
+    style="border:1px solid black; touch-action: none;"></canvas>
+
   <br><br>
   <button onclick="save()">Save</button>
 
@@ -14,7 +16,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // 🔥 REPLACE THIS WITH YOUR FIREBASE CONFIG
+    // 🔥 REPLACE WITH YOUR CONFIG
     const firebaseConfig = {
       apiKey: "AIzaSyCwqKvYDttWfIMiCrlWCECumOds9YJlkjc",
       authDomain: "draw-97c31.firebaseapp.com",
@@ -34,51 +36,65 @@
     ctx.lineWidth = 3;
     ctx.lineCap = "round";
 
-  let drawing = false;
+    let drawing = false;
 
-  function getPos(e) {
-    const rect = canvas.getBoundingClientRect();
-  if (e.touches) {
-    return {
-      x: e.touches[0].clientX - rect.left,
-      y: e.touches[0].clientY - rect.top
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      if (e.touches) {
+        return {
+          x: e.touches[0].clientX - rect.left,
+          y: e.touches[0].clientY - rect.top
+        };
+      }
+      return {
+        x: e.offsetX,
+        y: e.offsetY
+      };
+    }
+
+    function start(e) {
+      drawing = true;
+      const pos = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+    }
+
+    function draw(e) {
+      if (!drawing) return;
+      e.preventDefault();
+
+      const pos = getPos(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    }
+
+    function stop() {
+      drawing = false;
+    }
+
+    // Mouse
+    canvas.addEventListener("mousedown", start);
+    canvas.addEventListener("mousemove", draw);
+    canvas.addEventListener("mouseup", stop);
+    canvas.addEventListener("mouseleave", stop);
+
+    // Touch (mobile)
+    canvas.addEventListener("touchstart", start);
+    canvas.addEventListener("touchmove", draw);
+    canvas.addEventListener("touchend", stop);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const room = urlParams.get("room");
+
+    window.save = function() {
+      if (!room) {
+        alert("Missing room ID!");
+        return;
+      }
+      const data = canvas.toDataURL("image/jpeg", 0.5);
+      set(ref(db, "rooms/" + room + "/left"), data);
+      alert("Saved!");
     };
-  }
-  return {
-    x: e.offsetX,
-    y: e.offsetY
-  };
-}
-
-function start(e) {
-  drawing = true;
-  const pos = getPos(e);
-  ctx.beginPath();
-  ctx.moveTo(pos.x, pos.y);
-}
-
-function draw(e) {
-  if (!drawing) return;
-  e.preventDefault(); // important for mobile
-
-  const pos = getPos(e);
-  ctx.lineTo(pos.x, pos.y);
-  ctx.stroke();
-}
-
-function stop() {
-  drawing = false;
-}
-
-// Mouse
-canvas.addEventListener("mousedown", start);
-canvas.addEventListener("mousemove", draw);
-canvas.addEventListener("mouseup", stop);
-
-// Touch (mobile)
-canvas.addEventListener("touchstart", start);
-canvas.addEventListener("touchmove", draw);
-canvas.addEventListener("touchend", stop);
   </script>
 </body>
 </html>
