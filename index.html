@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Drawing Game</title>
+</head>
+<body>
+  <h1>2-Player Drawing Game</h1>
+
+  <p>Enter Room ID:</p>
+  <input id="room" placeholder="e.g. room1">
+
+  <br><br>
+
+  <button onclick="go('left')">Player 1 (Left)</button>
+  <button onclick="go('right')">Player 2 (Right)</button>
+  <button onclick="go('review')">Review</button>
+
+  <script>
+    function go(page) {
+      const room = document.getElementById("room").value;
+      if (!room) {
+        alert("Enter room ID!");
+        return;
+      }
+      window.location.href = page + ".html?room=" + room;
+    }
+  </script>
+</body>
+</html>
