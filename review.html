@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Review</title>
+</head>
+<body>
+  <h2>Review Drawing</h2>
+
+  <button onclick="load()">Review</button>
+
+  <br><br>
+
+  <canvas id="canvas" width="600" height="300" style="border:1px solid black;"></canvas>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCwqKvYDttWfIMiCrlWCECumOds9YJlkjc",
+      authDomain: "draw-97c31.firebaseapp.com",
+      databaseURL: "https://draw-97c31-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "draw-97c31",
+      storageBucket: "draw-97c31.firebasestorage.app",
+      messagingSenderId: "536389001280",
+      appId: "1:536389001280:web:e912c8da8b5a82999fffa5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const room = urlParams.get("room");
+
+    window.load = async function() {
+      const leftSnap = await get(ref(db, "rooms/" + room + "/left"));
+      const rightSnap = await get(ref(db, "rooms/" + room + "/right"));
+
+      const leftImg = new Image();
+      const rightImg = new Image();
+
+      leftImg.src = leftSnap.val();
+      rightImg.src = rightSnap.val();
+
+      leftImg.onload = () => ctx.drawImage(leftImg, 0, 0);
+      rightImg.onload = () => ctx.drawImage(rightImg, 300, 0);
+    };
+  </script>
+</body>
+</html>
