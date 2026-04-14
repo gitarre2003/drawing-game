@@ -39,15 +39,25 @@
       const leftSnap = await get(ref(db, "rooms/" + room + "/left"));
       const rightSnap = await get(ref(db, "rooms/" + room + "/right"));
 
-      const leftImg = new Image();
-      const rightImg = new Image();
+      if (!leftSnap.exists() || !rightSnap.exists()) {
+        alert("Both players must save first!");
+        return;
+      }
 
-      leftImg.src = leftSnap.val();
-      rightImg.src = rightSnap.val();
+    const leftImg = new Image();
+    const rightImg = new Image();
 
-      leftImg.onload = () => ctx.drawImage(leftImg, 0, 0);
-      rightImg.onload = () => ctx.drawImage(rightImg, 300, 0);
-    };
-  </script>
+    leftImg.src = leftSnap.val();
+    rightImg.src = rightSnap.val();
+
+    await Promise.all([
+      new Promise(res => leftImg.onload = res),
+      new Promise(res => rightImg.onload = res)
+    ]);
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(leftImg, 0, 0);
+    ctx.drawImage(rightImg, 300, 0);
+  };
 </body>
 </html>
