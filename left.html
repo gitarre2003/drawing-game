@@ -31,24 +31,54 @@
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
 
-    let drawing = false;
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
 
-    canvas.onmousedown = () => drawing = true;
-    canvas.onmouseup = () => drawing = false;
+  let drawing = false;
 
-    canvas.onmousemove = (e) => {
-      if (!drawing) return;
-      ctx.fillRect(e.offsetX, e.offsetY, 2, 2);
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+  if (e.touches) {
+    return {
+      x: e.touches[0].clientX - rect.left,
+      y: e.touches[0].clientY - rect.top
     };
+  }
+  return {
+    x: e.offsetX,
+    y: e.offsetY
+  };
+}
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const room = urlParams.get("room");
+function start(e) {
+  drawing = true;
+  const pos = getPos(e);
+  ctx.beginPath();
+  ctx.moveTo(pos.x, pos.y);
+}
 
-    window.save = function() {
-      const data = canvas.toDataURL("image/jpeg", 0.5); // compressed
-      set(ref(db, "rooms/" + room + "/left"), data);
-      alert("Saved!");
-    };
+function draw(e) {
+  if (!drawing) return;
+  e.preventDefault(); // important for mobile
+
+  const pos = getPos(e);
+  ctx.lineTo(pos.x, pos.y);
+  ctx.stroke();
+}
+
+function stop() {
+  drawing = false;
+}
+
+// Mouse
+canvas.addEventListener("mousedown", start);
+canvas.addEventListener("mousemove", draw);
+canvas.addEventListener("mouseup", stop);
+
+// Touch (mobile)
+canvas.addEventListener("touchstart", start);
+canvas.addEventListener("touchmove", draw);
+canvas.addEventListener("touchend", stop);
   </script>
 </body>
 </html>
