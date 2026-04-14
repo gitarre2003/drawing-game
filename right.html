@@ -2,21 +2,41 @@
 <html>
 <head>
   <title>Right Player</title>
+
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial;
+    }
+
+    canvas {
+      border: 2px solid black;
+      touch-action: none;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+    }
+  </style>
 </head>
+
 <body>
   <h2>Right Player</h2>
 
-  <canvas id="canvas" width="300" height="300"
-    style="border:1px solid black; touch-action: none;"></canvas>
+  <canvas id="canvas"></canvas>
 
-  <br><br>
   <button onclick="save()">Save</button>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // 🔥 REPLACE WITH YOUR CONFIG
     const firebaseConfig = {
       apiKey: "AIzaSyCwqKvYDttWfIMiCrlWCECumOds9YJlkjc",
       authDomain: "draw-97c31.firebaseapp.com",
@@ -33,65 +53,64 @@
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
 
+    canvas.width = 300;
+    canvas.height = 300;
+
     ctx.lineWidth = 3;
     ctx.lineCap = "round";
+    ctx.strokeStyle = "black";
 
     let drawing = false;
 
-    function getPos(e) {
-      const rect = canvas.getBoundingClientRect();
+    function pos(e) {
+      const r = canvas.getBoundingClientRect();
+
       if (e.touches) {
         return {
-          x: e.touches[0].clientX - rect.left,
-          y: e.touches[0].clientY - rect.top
+          x: (e.touches[0].clientX - r.left) * (canvas.width / r.width),
+          y: (e.touches[0].clientY - r.top) * (canvas.height / r.height)
         };
       }
+
       return {
-        x: e.offsetX,
-        y: e.offsetY
+        x: (e.clientX - r.left) * (canvas.width / r.width),
+        y: (e.clientY - r.top) * (canvas.height / r.height)
       };
     }
 
     function start(e) {
       drawing = true;
-      const pos = getPos(e);
+      const p = pos(e);
       ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y);
+      ctx.moveTo(p.x, p.y);
     }
 
-    function draw(e) {
+    function move(e) {
       if (!drawing) return;
       e.preventDefault();
 
-      const pos = getPos(e);
-      ctx.lineTo(pos.x, pos.y);
+      const p = pos(e);
+      ctx.lineTo(p.x, p.y);
       ctx.stroke();
     }
 
-    function stop() {
+    function end() {
       drawing = false;
     }
 
-    // Mouse
     canvas.addEventListener("mousedown", start);
-    canvas.addEventListener("mousemove", draw);
-    canvas.addEventListener("mouseup", stop);
-    canvas.addEventListener("mouseleave", stop);
+    canvas.addEventListener("mousemove", move);
+    canvas.addEventListener("mouseup", end);
+    canvas.addEventListener("mouseleave", end);
 
-    // Touch
-    canvas.addEventListener("touchstart", start);
-    canvas.addEventListener("touchmove", draw);
-    canvas.addEventListener("touchend", stop);
+    canvas.addEventListener("touchstart", start, { passive: false });
+    canvas.addEventListener("touchmove", move, { passive: false });
+    canvas.addEventListener("touchend", end);
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const room = urlParams.get("room");
+    const room = new URLSearchParams(location.search).get("room");
 
-    window.save = function() {
-      if (!room) {
-        alert("Missing room ID!");
-        return;
-      }
-      const data = canvas.toDataURL("image/jpeg", 0.5);
+    window.save = function () {
+      const data = canvas.toDataURL("image/png");
       set(ref(db, "rooms/" + room + "/right"), data);
       alert("Saved!");
     };
