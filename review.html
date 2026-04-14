@@ -2,15 +2,37 @@
 <html>
 <head>
   <title>Review</title>
+
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial;
+      text-align: center;
+    }
+
+    canvas {
+      border: 2px solid black;
+      margin-top: 10px;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+    }
+  </style>
 </head>
+
 <body>
   <h2>Review Drawing</h2>
 
   <button onclick="load()">Review</button>
 
-  <br><br>
-
-  <canvas id="canvas" width="600" height="300" style="border:1px solid black;"></canvas>
+  <canvas id="canvas" width="600" height="300"></canvas>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -32,53 +54,39 @@
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const room = urlParams.get("room");
+    const room = new URLSearchParams(location.search).get("room");
 
-    window.load = async function() {
-      if (!room) {
-        alert("Missing room ID!");
-        return;
+    window.load = async function () {
+      if (!room) return alert("Missing room ID!");
+
+      const leftSnap = await get(ref(db, "rooms/" + room + "/left"));
+      const rightSnap = await get(ref(db, "rooms/" + room + "/right"));
+
+      const left = leftSnap.val();
+      const right = rightSnap.val();
+
+      if (!left || !right) {
+        return alert("Both players must save first!");
       }
 
-      console.log("Room:", room);
+      const leftImg = new Image();
+      const rightImg = new Image();
 
-      try {
-        const leftSnap = await get(ref(db, "rooms/" + room + "/left"));
-        const rightSnap = await get(ref(db, "rooms/" + room + "/right"));
+      await Promise.all([
+        new Promise(res => {
+          leftImg.onload = res;
+          leftImg.src = left;
+        }),
+        new Promise(res => {
+          rightImg.onload = res;
+          rightImg.src = right;
+        })
+      ]);
 
-        const leftData = leftSnap.val();
-        const rightData = rightSnap.val();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        console.log("Left:", leftData);
-        console.log("Right:", rightData);
-
-        if (!leftData || !rightData) {
-          alert("Both players must save first!");
-          return;
-        }
-
-        const leftImg = new Image();
-        const rightImg = new Image();
-
-        leftImg.src = leftData;
-        rightImg.src = rightData;
-
-        leftImg.onload = function() {
-          ctx.drawImage(leftImg, 0, 0, 300, 300);
-        };
-
-        rightImg.onload = function() {
-          ctx.drawImage(rightImg, 300, 0, 300, 300);
-        };
-
-        leftImg.onerror = () => alert("Left image failed to load");
-        rightImg.onerror = () => alert("Right image failed to load");
-
-      } catch (err) {
-        console.error(err);
-        alert("Error loading data");
-      }
+      ctx.drawImage(leftImg, 0, 0, 300, 300);
+      ctx.drawImage(rightImg, 300, 0, 300, 300);
     };
   </script>
 </body>
