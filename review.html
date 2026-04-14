@@ -36,28 +36,50 @@
     const room = urlParams.get("room");
 
     window.load = async function() {
-      const leftSnap = await get(ref(db, "rooms/" + room + "/left"));
-      const rightSnap = await get(ref(db, "rooms/" + room + "/right"));
-
-      if (!leftSnap.exists() || !rightSnap.exists()) {
-        alert("Both players must save first!");
+      if (!room) {
+        alert("Missing room ID!");
         return;
       }
 
-    const leftImg = new Image();
-    const rightImg = new Image();
+      console.log("Room:", room);
 
-    leftImg.src = leftSnap.val();
-    rightImg.src = rightSnap.val();
+      try {
+        const leftSnap = await get(ref(db, "rooms/" + room + "/left"));
+        const rightSnap = await get(ref(db, "rooms/" + room + "/right"));
 
-    await Promise.all([
-      new Promise(res => leftImg.onload = res),
-      new Promise(res => rightImg.onload = res)
-    ]);
+        const leftData = leftSnap.val();
+        const rightData = rightSnap.val();
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(leftImg, 0, 0);
-    ctx.drawImage(rightImg, 300, 0);
-  };
+        console.log("Left:", leftData);
+        console.log("Right:", rightData);
+
+        if (!leftData || !rightData) {
+          alert("Both players must save first!");
+          return;
+        }
+
+        const leftImg = new Image();
+        const rightImg = new Image();
+
+        leftImg.src = leftData;
+        rightImg.src = rightData;
+
+        leftImg.onload = function() {
+          ctx.drawImage(leftImg, 0, 0, 300, 300);
+        };
+
+        rightImg.onload = function() {
+          ctx.drawImage(rightImg, 300, 0, 300, 300);
+        };
+
+        leftImg.onerror = () => alert("Left image failed to load");
+        rightImg.onerror = () => alert("Right image failed to load");
+
+      } catch (err) {
+        console.error(err);
+        alert("Error loading data");
+      }
+    };
+  </script>
 </body>
 </html>
